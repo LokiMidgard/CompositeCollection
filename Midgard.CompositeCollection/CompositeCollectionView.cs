@@ -38,7 +38,7 @@ namespace Midgard.CompositeCollection
                     startIndex += e.NewStartingIndex;
                     for (int i = 0; i < e.NewItems.Count; i++)
                     {
-                        this.Insert(startIndex + i,e.NewItems[i]);
+                        this.Insert(startIndex + i, e.NewItems[i]);
                     }
 
 
@@ -49,7 +49,7 @@ namespace Midgard.CompositeCollection
                 case NotifyCollectionChangedAction.Remove:
                     startIndex += e.OldStartingIndex;
                     for (int i = e.OldItems.Count - 1; i >= 0; i--)
-                                       {
+                    {
                         this.RemoveAt(startIndex + i);
                     }
                     break;
@@ -242,7 +242,7 @@ namespace Midgard.CompositeCollection
         {
             get
             {
-                if (currentIndex== -1)
+                if (currentIndex == -1)
                 {
                     return null;
                 }
@@ -286,6 +286,21 @@ namespace Midgard.CompositeCollection
         public event CurrentChangingEventHandler CurrentChanging;
         public event VectorChangedEventHandler<object> VectorChanged;
 
+        public bool OnCurrentChanging()
+        {
+            var e = new CurrentChangingEventArgs(false);
+            if (CurrentChanging != null)
+                CurrentChanging(this, e);
+            return !e.Cancel;
+        }
+        public void OnCurrentChanged()
+        {
+            var e = new EventArgs();
+            if (CurrentChanged != null)
+                CurrentChanged(this, e);
+            
+        }
+
         public IAsyncOperation<LoadMoreItemsResult> LoadMoreItemsAsync(uint count)
         {
             return Task.FromResult(new LoadMoreItemsResult() { Count = 0 }).AsAsyncOperation();
@@ -293,7 +308,12 @@ namespace Midgard.CompositeCollection
 
         public bool MoveCurrentTo(object item)
         {
+            if (!OnCurrentChanging())
+                return currentIndex >= 0;
+
             currentIndex = this.IndexOf(item);
+
+            OnCurrentChanged();
 
             return currentIndex >= 0;
 
@@ -301,41 +321,66 @@ namespace Midgard.CompositeCollection
 
         public bool MoveCurrentToFirst()
         {
+            if (!OnCurrentChanging())
+                return currentIndex >= 0;
+
             if (this.Count >= 0)
                 currentIndex = 0;
             else
                 currentIndex = -1;
+
+            OnCurrentChanged();
             return currentIndex >= 0;
         }
 
         public bool MoveCurrentToLast()
         {
+            if (!OnCurrentChanging())
+                return currentIndex >= 0;
+
             currentIndex = this.Count - 1;
+
+            OnCurrentChanged();
             return currentIndex >= 0;
         }
 
         public bool MoveCurrentToNext()
         {
+            if (!OnCurrentChanging())
+                return currentIndex >= 0;
+
             currentIndex++;
             if (currentIndex >= this.Count)
                 throw new IndexOutOfRangeException();
+
+            OnCurrentChanged();
             return currentIndex >= 0;
         }
 
         public bool MoveCurrentToPosition(int index)
         {
+            if (!OnCurrentChanging())
+                return currentIndex >= 0;
+
             currentIndex = index;
             if (currentIndex >= this.Count)
                 throw new IndexOutOfRangeException();
 
+            OnCurrentChanged();
             return currentIndex >= 0;
         }
 
         public bool MoveCurrentToPrevious()
         {
+            if (!OnCurrentChanging())
+                return currentIndex >= 0;
+
             currentIndex--;
             if (currentIndex < 0)
-                throw new IndexOutOfRangeException(); return currentIndex >= 0;
+                throw new IndexOutOfRangeException();
+
+            OnCurrentChanged();
+            return currentIndex >= 0;
         }
     }
 }
