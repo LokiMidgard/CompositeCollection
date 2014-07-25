@@ -8,77 +8,221 @@ using Windows.UI.Xaml.Data;
 
 namespace Midgard.CompositeCollection
 {
-    public class CompositeCollection : ObservableCollection<object>, ICollectionViewFactory
+    [ContentProperty(Name = "Composition")]
+    class CompositeCollection : ObservableCollection<object>, IList<object>
     {
 
-        public event NotifyCollectionChangedEventHandler ContainedCollectionChanged;
-        private void OnContainedCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+
+        public ObservableCollection<object> Composition
         {
-            if (ContainedCollectionChanged != null)
-                ContainedCollectionChanged(sender, e);
+            get { return composition; }
         }
 
-        private void AddCollectionContainer(CollectionContainer cc)
+
+
+        private void Collection_ContainedCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
-            cc.CollectionChanged += OnContainedCollectionChanged;
+            var index = composition.IndexOf(sender);
+            var startIndex = composition.Take(index).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+
+                    startIndex += e.NewStartingIndex;
+                    for (int i = 0; i < e.NewItems.Count; i++)
+                    {
+                        Insert(startIndex + i, e.NewItems[i]);
+                    }
+
+
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    Reset();
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    startIndex += e.OldStartingIndex;
+                    for (int i = e.OldItems.Count - 1; i >= 0; i--)
+                    {
+                        RemoveAt(startIndex + i);
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    startIndex += e.OldStartingIndex;
+                    for (int i = e.OldItems.Count - 1; i >= 0; i--)
+                    {
+                        RemoveAt(startIndex + i);
+                    }
+                    startIndex -= e.OldStartingIndex;
+                    startIndex += e.NewStartingIndex;
+                    for (int i = 0; i < e.NewItems.Count; i++)
+                    {
+                        Insert(startIndex + i, e.NewItems[i]);
+                    }
+
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                    Reset();
+                    break;
+                default:
+                    Reset();
+                    break;
+            }
+
+
+
+
 
         }
 
-        private void RemoveCollectionContainer(CollectionContainer cc)
-        {
-            cc.CollectionChanged+=  OnContainedCollectionChanged;
 
+
+        private void CompositionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        {
+            switch (e.Action)
+            {
+                case NotifyCollectionChangedAction.Add:
+                    {
+
+                        var startIndex = Composition.Cast<object>().Take(e.NewStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        foreach (var item in e.NewItems)
+                        {
+                            var cc = item as CollectionContainer;
+                            if (cc != null)
+                            {
+                                cc.CollectionChanged += Collection_ContainedCollectionChanged;
+                                if (cc.Collection != null)
+                                    foreach (var c2 in cc.Collection)
+                                    {
+                                        Add(c2);
+                                    }
+                            }
+                            else
+                                Add(item);
+                        }
+
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Move:
+                    Reset();
+                    break;
+                case NotifyCollectionChangedAction.Remove:
+                    {
+
+
+                        foreach (var item in e.OldItems)
+                        {
+                            var cc = item as CollectionContainer;
+                            if (cc != null)
+                            {
+                                cc.CollectionChanged -= Collection_ContainedCollectionChanged;
+                            }
+                        }
+
+
+                        var startIndex = Composition.Cast<object>().Take(e.OldStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        var count = Composition.Cast<object>().Skip(e.OldStartingIndex).Take(e.OldItems.Count).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        for (int i = startIndex + count - 1; i >= startIndex; i--)
+                        {
+                            RemoveAt(i);
+                        }
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Replace:
+                    {
+                        foreach (var item in e.OldItems)
+                        {
+                            var cc = item as CollectionContainer;
+                            if (cc != null)
+                            {
+                                cc.CollectionChanged -= Collection_ContainedCollectionChanged;
+                            }
+                        }
+                        foreach (var item in e.NewItems)
+                        {
+                            var cc = item as CollectionContainer;
+                            if (cc != null)
+                            {
+                                cc.CollectionChanged += Collection_ContainedCollectionChanged;
+                            }
+                        }
+
+                        var startIndex = Composition.Cast<object>().Take(e.OldStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        var count = Composition.Cast<object>().Skip(e.OldStartingIndex).Take(e.OldItems.Count).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        for (int i = startIndex + count - 1; i >= startIndex; i--)
+                        {
+                            RemoveAt(i);
+                        }
+                    }
+                    {
+
+                        var startIndex = Composition.Cast<object>().Take(e.NewStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        foreach (var item in e.NewItems)
+                        {
+                            var cc = item as CollectionContainer;
+                            if (cc != null)
+                            {
+                                foreach (var c2 in cc.Collection)
+                                {
+                                    Add(c2);
+                                }
+                            }
+                            else
+                                Add(item);
+                        }
+
+                    }
+                    break;
+                case NotifyCollectionChangedAction.Reset:
+                    Reset();
+                    break;
+                default:
+                    Reset();
+                    break;
+            }
         }
 
-        protected override void ClearItems()
+        private void Reset()
         {
+
             foreach (var item in this)
             {
                 var cc = item as CollectionContainer;
                 if (cc != null)
-                RemoveCollectionContainer(cc);
+                {
+                    cc.CollectionChanged -= Collection_ContainedCollectionChanged;
+                }
             }
-            base.ClearItems();
+
+            Clear();
+            if (Composition != null)
+            {
+                foreach (var item in Composition)
+                {
+                    var cc = item as CollectionContainer;
+                    if (cc != null)
+                    {
+                        cc.CollectionChanged += Collection_ContainedCollectionChanged;
+                    }
+                    Add(item);
+                }
+            }
         }
 
-        protected override void InsertItem(int index, object item)
+        private readonly ObservableCollection<object> composition;
+
+
+
+        public CompositeCollection()
         {
-            var cc = item as CollectionContainer;
-            if (cc != null)
-                AddCollectionContainer(cc);
-
-            base.InsertItem(index, item);
+            composition = new ObservableCollection<object>();
+            composition.CollectionChanged += CompositionChanged;
         }
 
-        protected override void RemoveItem(int index)
-        {
-            var cc = this[index] as CollectionContainer;
-            if (cc != null)
-                RemoveCollectionContainer(cc);
-
-            base.RemoveItem(index);
-        }
-
-        protected override void SetItem(int index, object item)
-        {
-            var cc = this[index] as CollectionContainer;
-            if (cc != null)
-                RemoveCollectionContainer(cc);
-
-            cc = item as CollectionContainer;
-            if (cc != null)
-                AddCollectionContainer(cc);
-            base.SetItem(index, item);
-        }
-
-
-        public ICollectionView CreateView()
-        {
-            return new CompositeCollectionView(this);
-        }
 
 
 
 
     }
+
 }

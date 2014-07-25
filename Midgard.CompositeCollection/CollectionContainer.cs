@@ -11,42 +11,45 @@ using Windows.UI.Xaml;
 
 namespace Midgard.CompositeCollection
 {
-    public sealed class CollectionContainer : DependencyObject, INotifyCollectionChanged
+    [ContentProperty(Name = "Collection")]
+    class CollectionContainer : DependencyObject, INotifyCollectionChanged
     {
 
 
-
-        public ObservableCollection<object> Collection
+        public IEnumerable Collection
         {
-            get { return (ObservableCollection<object>)GetValue(CollectionProperty); }
+            get { return (IEnumerable)GetValue(CollectionProperty); }
             set { SetValue(CollectionProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for Collection.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty CollectionProperty =
-            DependencyProperty.Register("Collection", typeof(ObservableCollection<object>), typeof(CollectionContainer), new PropertyMetadata(null, CollectionPropChanged));
+            DependencyProperty.Register("Collection", typeof(IEnumerable), typeof(CollectionContainer), new PropertyMetadata(null, CollectioPropertyChanged));
 
-        private static void CollectionPropChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        public event NotifyCollectionChangedEventHandler CollectionChanged;
+
+        private static void CollectioPropertyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
         {
             var me = d as CollectionContainer;
             var oldValue = e.OldValue as INotifyCollectionChanged;
             var newValue = e.NewValue as INotifyCollectionChanged;
 
             if (oldValue != null)
+            {
                 oldValue.CollectionChanged -= me.OnCollectionChanged;
+            }
             if (newValue != null)
+            {
                 newValue.CollectionChanged += me.OnCollectionChanged;
-
-
+            }
         }
 
-        public event NotifyCollectionChangedEventHandler CollectionChanged;
-
-        public void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (CollectionChanged != null)
-                CollectionChanged(sender, e);
+                CollectionChanged(this, e);
         }
-
     }
+
+
 }

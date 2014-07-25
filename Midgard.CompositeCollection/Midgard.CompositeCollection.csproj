@@ -36,9 +36,6 @@
   <ItemGroup>
     <Compile Include="CollectionContainer.cs" />
     <Compile Include="CompositeCollection .cs" />
-    <Compile Include="CompositeCollectionView.cs" />
-    <Compile Include="Enumerable.cs" />
-    <Compile Include="VectorChangedEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
