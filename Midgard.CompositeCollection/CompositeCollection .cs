@@ -5,12 +5,29 @@ using System.Collections.Specialized;
 using System.Linq;
 using System.Text;
 using Windows.UI.Xaml.Data;
+using Windows.UI.Xaml.Markup;
 
 namespace Midgard.CompositeCollection
 {
     [ContentProperty(Name = "Composition")]
-    class CompositeCollection : ObservableCollection<object>, IList<object>
+    public class CompositeCollection : ObservableCollection<object>, IList<object>
     {
+
+        private readonly Func<object, int> sum = x =>
+                        {
+                            var cc = x as CollectionContainer;
+                            if (cc != null)
+                            {
+                                if (cc.Collection == null)
+                                    return 0;
+
+                                return cc.Collection.Cast<object>().Count();
+                            }
+                            else
+                                return 1;
+                        };
+
+
 
 
         public ObservableCollection<object> Composition
@@ -23,7 +40,7 @@ namespace Midgard.CompositeCollection
         private void Collection_ContainedCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             var index = composition.IndexOf(sender);
-            var startIndex = composition.Take(index).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+            var startIndex = composition.Take(index).Sum(sum);
 
             switch (e.Action)
             {
@@ -84,7 +101,7 @@ namespace Midgard.CompositeCollection
                 case NotifyCollectionChangedAction.Add:
                     {
 
-                        var startIndex = Composition.Cast<object>().Take(e.NewStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        var startIndex = Composition.Cast<object>().Take(e.NewStartingIndex).Sum(sum);
                         foreach (var item in e.NewItems)
                         {
                             var cc = item as CollectionContainer;
@@ -119,9 +136,8 @@ namespace Midgard.CompositeCollection
                             }
                         }
 
-
-                        var startIndex = Composition.Cast<object>().Take(e.OldStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
-                        var count = Composition.Cast<object>().Skip(e.OldStartingIndex).Take(e.OldItems.Count).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        var startIndex = Composition.Cast<object>().Take(e.OldStartingIndex).Sum(sum);
+                        var count = Composition.Cast<object>().Skip(e.OldStartingIndex).Take(e.OldItems.Count).Sum(sum);
                         for (int i = startIndex + count - 1; i >= startIndex; i--)
                         {
                             RemoveAt(i);
@@ -147,8 +163,8 @@ namespace Midgard.CompositeCollection
                             }
                         }
 
-                        var startIndex = Composition.Cast<object>().Take(e.OldStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
-                        var count = Composition.Cast<object>().Skip(e.OldStartingIndex).Take(e.OldItems.Count).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        var startIndex = Composition.Cast<object>().Take(e.OldStartingIndex).Sum(sum);
+                        var count = Composition.Cast<object>().Skip(e.OldStartingIndex).Take(e.OldItems.Count).Sum(sum);
                         for (int i = startIndex + count - 1; i >= startIndex; i--)
                         {
                             RemoveAt(i);
@@ -156,7 +172,7 @@ namespace Midgard.CompositeCollection
                     }
                     {
 
-                        var startIndex = Composition.Cast<object>().Take(e.NewStartingIndex).Sum(x => x is CollectionContainer ? (x as CollectionContainer).Collection.Cast<object>().Count() : 1);
+                        var startIndex = Composition.Cast<object>().Take(e.NewStartingIndex).Sum(sum);
                         foreach (var item in e.NewItems)
                         {
                             var cc = item as CollectionContainer;

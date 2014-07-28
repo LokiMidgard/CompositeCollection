@@ -30,18 +30,18 @@ namespace TestApp
 
         private async void Test()
         {
-            var coll = new Midgard.CompositeCollection.CompositeCollection();
-            this.list.ItemsSource =  (coll as ICollectionViewFactory).CreateView();
-            await new Windows.UI.Popups.MessageDialog("Test 1").ShowAsync();
-            var cc = new Midgard.CompositeCollection.CollectionContainer();
-            cc.Collection = new System.Collections.ObjectModel.ObservableCollection<object>(new object[] { "t1.1", "t1.2" });
-            coll.Add(cc);
-            await new Windows.UI.Popups.MessageDialog("Test 2").ShowAsync();
-            cc.Collection.Insert(1,"t2");
-            await new Windows.UI.Popups.MessageDialog("Test 3").ShowAsync();
-            cc = new Midgard.CompositeCollection.CollectionContainer();
-            cc.Collection = new System.Collections.ObjectModel.ObservableCollection<object>(new object[] { "t2.1", "t2.2" });
-            coll.Add(cc);
+            //var coll = new Midgard.CompositeCollection.CompositeCollection();
+            //this.list.ItemsSource =  (coll as ICollectionViewFactory).CreateView();
+            //await new Windows.UI.Popups.MessageDialog("Test 1").ShowAsync();
+            //var cc = new Midgard.CompositeCollection.CollectionContainer();
+            //cc.Collection = new System.Collections.ObjectModel.ObservableCollection<object>(new object[] { "t1.1", "t1.2" });
+            //coll.Add(cc);
+            //await new Windows.UI.Popups.MessageDialog("Test 2").ShowAsync();
+            //cc.Collection.Insert(1,"t2");
+            //await new Windows.UI.Popups.MessageDialog("Test 3").ShowAsync();
+            //cc = new Midgard.CompositeCollection.CollectionContainer();
+            //cc.Collection = new System.Collections.ObjectModel.ObservableCollection<object>(new object[] { "t2.1", "t2.2" });
+            //coll.Add(cc);
 
         }
     }

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
@@ -7,12 +8,12 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
 using Windows.UI.Xaml;
-
+using Windows.UI.Xaml.Markup;
 
 namespace Midgard.CompositeCollection
 {
     [ContentProperty(Name = "Collection")]
-    class CollectionContainer : DependencyObject, INotifyCollectionChanged
+    public   class CollectionContainer : DependencyObject, INotifyCollectionChanged
     {
 
 
